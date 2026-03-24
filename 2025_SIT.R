@@ -10,7 +10,7 @@ library(here)
 install.packages("tidyverse")
 library(tidyverse)
 library(readr)
-Data <- read_delim(here("dados", "microdata_2025.csv"),
+Data <- read_delim(here("data", "microdata_2025.csv"),
                    delim = ";",
                    na = c("", " "))
 

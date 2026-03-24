@@ -22,7 +22,8 @@ cols_to_get <-  c("year",
                   "t12_a",
                   "t12_b",
                   "t12_d",
-                  "t12_e")
+                  "t12_e",
+                  "origin_year")
 
 TIC_ALLTIME <- Years_RS %>%
   set_names() %>%
@@ -33,14 +34,21 @@ TIC_ALLTIME <- Years_RS %>%
                col_types = cols(.default = "d"),
                guess_max = 50000) %>%
       rename_with(tolower) %>%
-      select(any_of(cols_to_get)) %>%
       mutate(Year = .x)
   }, .id = "origin_year")
 
 
+TIC_ALLTIMESel <- TIC_ALLTIME %>%
+  select(any_of(cols_to_get))
+
 head(TIC_ALLTIME)
 
 view(TIC_ALLTIME)
+view(TIC_ALLTIMESel)
+# dealing with the changes in column names
+
+
+
 
 
 
