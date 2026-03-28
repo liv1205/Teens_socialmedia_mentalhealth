@@ -104,19 +104,19 @@ library(showtext)
 font_add_google("Roboto", "roboto") # Roboto é super limpa e moderna
 showtext_auto() # Ativa o uso das fontes nos gráficos
 
-# plotting graph 1 
+# plotting graph 1 -> Self Harm
 
 TIC_ALLTIMESel %>%
-  filter(TIC_ALLTIMESel$selfharm_index %in% c(0,1,97)) %>%
+  filter(TIC_ALLTIMESel$selfharm_index %in% c(0,1,97) & TIC_ALLTIMESel$age_kids %in% c(3,4)) %>%
   ggplot(aes(x = factor(origin_year), fill = factor(selfharm_index),weight = weight)) + 
   geom_bar(position = "fill") +
   scale_y_continuous(labels = label_percent()) +
-  scale_fill_manual(values = c("0" = "#2c3e50", "1" = "#e74c3c", "97" = "#bdc3c7"),
-                    labels = c("0" = "No", "1" = "Yes", "97" = "Don't know")) +
-  labs(title = "Self-Harm Content Access Evolution",
-       subtitle = "Percentage of children reporting access to harmful content (Weighted)",
+  scale_fill_manual(values = c("0" = "#2c3e60", "1" = "#e86c5c", "97" = "#bdc3c7"),
+                    labels = c("0" = "Não", "1" = "Sim", "97" = "Não sei")) +
+  labs(title = "Evolução do acesso a conteúdo nocivo",
+       subtitle = "Porcentagem de crianças que acessaram formas de se machucar (Amostra de 13 a 17 anos)",
        x = NULL, y = "%",
-       fill = "Answer") +
+       fill = "Resposta ") +
   theme_minimal(base_family = "roboto")+
   theme(
     plot.title = element_text(face = "bold", size = 16, color = "#2c3e50"),
@@ -128,6 +128,55 @@ TIC_ALLTIMESel %>%
     panel.grid.minor = element_blank()
   )
 
+
+TIC_ALLTIMESel %>%
+  filter(TIC_ALLTIMESel$skinny_index %in% c(0,1,97) & 
+           TIC_ALLTIMESel$age_kids %in% c(3,4) &
+           TIC_ALLTIMESel$kids_gender == 1) %>% # Masculine
+  ggplot(aes(x = factor(origin_year), fill = factor(skinny_index),weight = weight)) + 
+  geom_bar(position = "fill") +
+  scale_y_continuous(labels = label_percent()) +
+  scale_fill_manual(values = c("0" = "#BEE3DB", "1" = "#A7C7E7", "97" = "#CFCFCF"),
+                    labels = c("0" = "Não", "1" = "Sim", "97" = "Não sei")) +
+  labs(title = "Evolução da Auto imagem ",
+       subtitle = "Porcentagem de crianças que pesquisaram maneiras de perder peso (Meninos de 13 a 17 anos)",
+       x = NULL, y = "%",
+       fill = "Resposta ") +
+  theme_minimal(base_family = "roboto")+
+  theme(
+    plot.title = element_text(face = "bold", size = 16, color = "#2c3e50"),
+    plot.subtitle = element_text(size = 10, color = "#7f8c8d"),
+    axis.title.y = element_text(size = 9, color = "#7f8c8d"),
+    axis.text = element_text(size = 11, color = "#2c3e50"),
+    legend.position = "bottom",
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor = element_blank()
+  )
+
+
+TIC_ALLTIMESel %>%
+  filter(TIC_ALLTIMESel$skinny_index %in% c(0,1,97) & 
+           TIC_ALLTIMESel$age_kids %in% c(3,4) &
+           TIC_ALLTIMESel$kids_gender == 2) %>% # Feminine
+  ggplot(aes(x = factor(origin_year), fill = factor(skinny_index),weight = weight)) + 
+  geom_bar(position = "fill") +
+  scale_y_continuous(labels = label_percent()) +
+  scale_fill_manual(values = c("0" = "#D8C3E5", "1" = "#F4C2C2", "97" = "#CFCFCF"),
+                    labels = c("0" = "Não", "1" = "Sim", "97" = "Não sei")) +
+  labs(title = "Evolução da Auto imagem ",
+       subtitle = "Porcentagem de crianças que pesquisaram maneiras de perder peso (Meninas de 13 a 17 anos)",
+       x = NULL, y = "%",
+       fill = "Resposta") +
+  theme_minimal(base_family = "roboto")+
+  theme(
+    plot.title = element_text(face = "bold", size = 16, color = "#2c3e50"),
+    plot.subtitle = element_text(size = 10, color = "#7f8c8d"),
+    axis.title.y = element_text(size = 9, color = "#7f8c8d"),
+    axis.text = element_text(size = 11, color = "#2c3e50"),
+    legend.position = "bottom",
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor = element_blank()
+  )
 
 
 
