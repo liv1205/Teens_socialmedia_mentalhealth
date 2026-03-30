@@ -7,7 +7,6 @@ library(readr)
 library(dplyr)
 library(magrittr)
 
-#-----------------------------------
 
 # ---- Collecting data ----
 Years_RS <- c(2015,2018,2024)
@@ -47,7 +46,7 @@ TIC_ALLTIME <- Years_RS %>%
 
 
 
-  #-----------------------------------
+
 
 
 
@@ -86,7 +85,7 @@ TIC_ALLTIMESel <- TIC_ALLTIME %>%
 view(TIC_ALLTIMESel)
 
 
-#--------------------------------------------
+
 
 
 
@@ -98,6 +97,8 @@ library(ggplot2)
 library(scales)
 install.packages("showtext")
 library(showtext)
+install.packages("ggthemes")
+library(ggthemes)
 
 # setting default font
 
@@ -111,7 +112,7 @@ TIC_ALLTIMESel %>%
   ggplot(aes(x = factor(origin_year), fill = factor(selfharm_index),weight = weight)) + 
   geom_bar(position = "fill") +
   scale_y_continuous(labels = label_percent()) +
-  scale_fill_manual(values = c("0" = "#2c3e60", "1" = "#e86c5c", "97" = "#bdc3c7"),
+  scale_fill_manual(values = c("0" = "#0A3351", "1" = "#AE8363", "97" = "#697677"),
                     labels = c("0" = "Não", "1" = "Sim", "97" = "Não sei")) +
   labs(title = "Evolução do acesso a conteúdo nocivo",
        subtitle = "Porcentagem de crianças que acessaram formas de se machucar (Amostra de 13 a 17 anos)",
@@ -128,6 +129,10 @@ TIC_ALLTIMESel %>%
     panel.grid.minor = element_blank()
   )
 
+
+?theme_economist
+
+#---- plotting "skinny_index" for boys and girls ----
 
 TIC_ALLTIMESel %>%
   filter(TIC_ALLTIMESel$skinny_index %in% c(0,1,97) & 
@@ -157,7 +162,8 @@ TIC_ALLTIMESel %>%
 TIC_ALLTIMESel %>%
   filter(TIC_ALLTIMESel$skinny_index %in% c(0,1,97) & 
            TIC_ALLTIMESel$age_kids %in% c(3,4) &
-           TIC_ALLTIMESel$kids_gender == 2) %>% # Feminine
+           TIC_ALLTIMESel$kids_gender == 2   # Feminine  
+           ) %>%
   ggplot(aes(x = factor(origin_year), fill = factor(skinny_index),weight = weight)) + 
   geom_bar(position = "fill") +
   scale_y_continuous(labels = label_percent()) +
@@ -180,5 +186,40 @@ TIC_ALLTIMESel %>%
 
 
 
-# =================
+# Plotting "Skinny_index" -> Together: by gender ----
+
+TIC_ALLTIMESel %>%
+  filter(skinny_index %in% c(0,1,97),
+         age_kids %in% c(3,4)) %>% # age 13-17
+  ggplot(aes(x = factor(origin_year),
+             fill = factor(skinny_index),
+             weight = weight)) +
+  geom_bar(position = "fill") +
+  facet_wrap(~kids_gender, nrow = 1,
+             labeller = labeller(kids_gender = c("1" = "Meninos", "2" = "Meninas"))) + 
+  # 1 - boys/meninos and 2 - girls/meninas
+  scale_y_continuous(labels = percent_format()) +
+  scale_fill_manual(values = c("0" = "#0A3351", "1" = "#AE8363", "97" = "#697677"),
+                    labels = c("0" = "Não" , "1" = "Sim", "97" = "Não sei")) + # 0 - NO; 1- YES; 97 - Don't Know
+  labs(title = "Evolução da Autoimagem", #
+       subtitle = "Porcentagem de adolescentes (13–17 anos) que pesquisaram maneiras de perder peso",
+       # percentage of kids who looked up online how to get skinny
+       x = "Ano", y = "%",
+       fill = "Resposta") +
+  theme_minimal(base_family = "roboto") +
+  theme(
+    plot.title = element_text(face = "bold", size = 16, color = "#2c3e50"),
+    plot.subtitle = element_text(size = 10, color = "#7f8c8d"),
+    axis.title.y = element_text(size = 11, color = "#7f8c8d"),
+    axis.text = element_text(size = 11, color = "#2c3e50"),
+    legend.position = "bottom",
+    panel.grid.major.x = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.background = element_rect("#E1DFD3"),
+    plot.background = element_rect("#E1DFD3"),
+    panel.border     = element_blank()
+  )
+
+
+  # =================
 
