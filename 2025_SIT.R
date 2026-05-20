@@ -10,7 +10,8 @@ library(here)
 install.packages("tidyverse")
 library(tidyverse)
 library(readr)
-Data <- read_delim(here("data", "microdata_2025.csv"),
+library(dplyr)
+Data <- read_delim(here("data", "microdata_2024.csv"),
                    delim = ";",
                    na = c("", " "))
 
@@ -19,7 +20,7 @@ str(Data)
 
 # filtering the data > 13
 
-Data_v1 <- Data[Data$IDADE_KIDS >= 13,]
+Data_v1 <- Data[Data$IDADE_KIDS >= 0,]
 
 
 # Quick code here just to see what's the most used social media by the teens.
@@ -66,4 +67,19 @@ Probs <- list(
 Probs_table <- do.call(rbind, Probs)
 view(Probs_table)
 
+
+sum(DATA_NOM$M1_D == 1    ,na.rm = TRUE)
+
+prob <- (sum(DATA_NOM$M1_D == 1    ,na.rm = TRUE)/count(DATA_NOM))
+view(prob)
+
+prob2 <- (sum(DATA_NOM$T12_E == 1    ,na.rm = TRUE)/count(DATA_NOM))
+
+view(prob2)
+
+
+
+
+
 #
+
