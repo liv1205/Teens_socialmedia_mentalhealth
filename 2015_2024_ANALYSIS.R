@@ -11,6 +11,16 @@ library(magrittr)
 install.packages("ordinal")
 library(ordinal)
 library(forcats)
+library(ggplot2)
+library(scales)
+install.packages("showtext")
+library(showtext)
+install.packages("ggthemes")
+library(ggthemes)
+remotes::install_github("ipeaGIT/geobr")
+library(geobr)
+
+
 
 # ---- Collecting data ----
 Years_RS <- c(2015,2018,2024)
@@ -53,9 +63,6 @@ TIC_ALLTIME <- Years_RS %>%
 TIC_ALLTIME$n2_g <- fct_rev(as.factor(TIC_ALLTIME$n2_g))
 
 view(TIC_ALLTIME)
-
-
-
 
 
 
@@ -114,20 +121,9 @@ TIC_ALLTIMESel <- TIC_ALLTIME %>%
 view(TIC_ALLTIMESel)
 
 
-
-
-
-
 ###########################################################################
 
 #Creating graphs just so I learn how my database looks like ====
-
-library(ggplot2)
-library(scales)
-install.packages("showtext")
-library(showtext)
-install.packages("ggthemes")
-library(ggthemes)
 
 # setting default font
 
@@ -336,8 +332,7 @@ parental_distance <- TIC_ALLTIME %>% #----
   filter(selfharm_index %in% c(97,98,99 , 0:5))
 view(parental_distance)
 
-remotes::install_github("ipeaGIT/geobr")
-library(geobr)
+
 
 ggplot(
   read_region(year = 2020) %>%
