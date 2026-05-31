@@ -23,7 +23,7 @@ library(geobr)
 
 
 # ---- Collecting data ----
-Years_RS <- c(2015,2018,2024)
+Years_tic <- c(2015,2018,2024)
 
 cols_to_get <-  c("resp_idade",
                   "resp_escolaridade",
@@ -44,11 +44,12 @@ cols_to_get <-  c("resp_idade",
                   "faixa_etaria",
                   "t8",
                   "social_media_use",
-                  "resp_sexo"
+                  "resp_sexo",
+                  "n2_g1"
                   )
 
-TIC_ALLTIME <- Years_RS %>%
-  set_names(Years_RS) %>%
+TIC_ALLTIME <- Years_tic %>%
+  set_names(Years_tic) %>%
   map_df(~ {
     read_delim(here("data",paste0("microdata_",.x, ".csv")),
                delim = ";",
@@ -57,10 +58,10 @@ TIC_ALLTIME <- Years_RS %>%
                na = c("", " ", "99"),
                guess_max = 50000) %>%
       rename_with(tolower) %>%
-      mutate(Years_RS = .x)
+      distinct() %>%
+      mutate(Years_tic = .x)
   }, .id = "origin_year")
 
-TIC_ALLTIME$n2_g <- fct_rev(as.factor(TIC_ALLTIME$n2_g))
 
 view(TIC_ALLTIME)
 
@@ -68,6 +69,7 @@ view(TIC_ALLTIME)
 
 # ---- Organizing data ----
 TIC_ALLTIMESel <- TIC_ALLTIME %>%
+  mutate(social_media_use = coalesce(n2_g,n2_g1)) %>%
   mutate(idade_aju = case_when(
     idade_kids %in% 9:10 ~ 1,
     idade_kids %in% 11:12 ~ 2,
@@ -75,9 +77,7 @@ TIC_ALLTIMESel <- TIC_ALLTIME %>%
     idade_kids %in% 15:17 ~ 4,
     TRUE ~ as.numeric(faixa_etaria)
   )) %>%
-  filter(!n2_g %in% c(99,100), 
-         !is.na(n2_g), 
-         idade_aju %in% c(3,4)) %>%
+  filter(idade_aju %in% c(3,4)) %>%
   mutate(age_kids = coalesce(idade_aju, as.numeric(faixa_etaria)))%>%
   select(origin_year, age_kids, peso, any_of(cols_to_get)) %>%
   rename(
@@ -94,7 +94,6 @@ TIC_ALLTIMESel <- TIC_ALLTIME %>%
     "addiction_index"   = "t12_e",
     "weight"            = "peso",
     "sa_danger"         = "t8",
-    "social_media_use"  = "n2_g",
     "adult_gender"      = "resp_sexo"
   ) %>%
   mutate(adult_educ = case_when(
@@ -108,12 +107,17 @@ TIC_ALLTIMESel <- TIC_ALLTIME %>%
     social_media_use %in% c(1, 2) ~ 2,  # Low
     TRUE ~ NA_real_
   )) %>%
+  mutate( origin_year_aj = case_when(
+    origin_year == 2015 ~ 2015,
+    origin_year == 2018 ~ 2019,
+    origin_year == 2024 ~2024,
+    TRUE ~ NA_real_)
+    ) %>%
   mutate(danger_exposure = rowSums(across(c(selfharm_index,
                                             imagedistortion_index,
                                             sa_danger)), na.rm = TRUE)
          ) %>%
-  filter(!danger_exposure %in% c(90:400)) %>%
-  select(-faixa_etaria, -idade_kids, -resp_escolaridade)
+  select(-faixa_etaria, -idade_kids, -resp_escolaridade,-n2_g, -n2_g1)
 
 
 
@@ -133,8 +137,9 @@ showtext_auto() # Ativa o uso das fontes nos gráficos
 # plotting graph 1 -> Self Harm
 
 TIC_ALLTIMESel %>%
-  filter(TIC_ALLTIMESel$selfharm_index %in% c(0,1,97) & TIC_ALLTIMESel$age_kids %in% c(3,4)) %>%
-  ggplot(aes(x = factor(origin_year), fill = factor(selfharm_index),weight = weight)) + 
+  filter(TIC_ALLTIMESel$selfharm_index %in% c(0,1,97) & 
+           TIC_ALLTIMESel$age_kids %in% c(3,4)) %>%
+  ggplot(aes(x = factor(origin_year_aj), fill = factor(selfharm_index),weight = weight)) + 
   geom_bar(position = "fill") +
   scale_y_continuous(labels = label_percent()) +
   scale_fill_manual(values = c("0" = "#0A3351", "1" = "#AE8363", "97" = "#697677"),
@@ -155,7 +160,7 @@ TIC_ALLTIMESel %>%
   )
 
 
-#---- plotting "skinny_index" for boys and girls ----
+  #---- plotting "skinny_index" for boys and girls ----
 
 TIC_ALLTIMESel %>%
   filter(TIC_ALLTIMESel$skinny_index %in% c(0,1,97) & 
@@ -180,6 +185,7 @@ TIC_ALLTIMESel %>%
     panel.grid.major.x = element_blank(),
     panel.grid.minor = element_blank()
   )
+
 
 
 TIC_ALLTIMESel %>%
@@ -423,7 +429,7 @@ parental_distance %>%
   )))) %>%
   ggplot(aes(x = renda_familiar_label)) +
   geom_bar(fill = "#2c3e50") +
-  geom_text(stat = "count", aes(label = ..count..), hjust = -0.2, color = "black", size = 4) +
+  geom_text(stat = "count", aes(label = after_stat(count)), hjust = -0.2, color = "black", size = 4) +
   coord_flip() + 
   labs(
     title = "Desconhecimento Parental sobre Automutilação por Renda",
@@ -456,10 +462,28 @@ parental_distance %>%
 # Analysis of parental internet usage
 
 
-  
+TIC_ALLTIMESel %>%
+  mutate(across(
+    c(supervised_usage, kids_gender, race_kids, selfharm_index, suicide_index, imagedistortion_index, sleepless_index, dependency_index, qualitytime_index, addiction_index,social_media_use,adult_educ),
+    ~ ifelse(.x %in% c(97, 98, 99), NA, .x)
+  )) %>%
+  filter(origin_year == 2024) %>%
+  summary()
 
 
+TIC_ALLTIMESel %>%
+  mutate(across(
+    c(supervised_usage, kids_gender, race_kids, selfharm_index, suicide_index, imagedistortion_index, sleepless_index, dependency_index, qualitytime_index, addiction_index,social_media_use,adult_educ),
+    ~ ifelse(.x %in% c(97, 98, 99), NA, .x)
+  )) %>%
+  filter(origin_year == 2019) %>%
+  summary()
 
 
+table(TIC_ALLTIMESel$selfharm_index, useNA = "always")
 
 
+TIC_ALLTIMESel %>%
+  filter(origin_year == 2019) %>%
+  count(selfharm_index, wt = weight) %>%
+  mutate(porcentagem = n / sum(n) * 100)
