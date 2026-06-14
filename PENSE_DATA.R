@@ -43,7 +43,6 @@ PENSE2024 <- fread("data/pense_2024.csv",
          'B09016A2',
          'B11007',
          'B11002',
-         'B13001',
          'B03006B'
   ) %>%
   clean_names() %>%
@@ -74,8 +73,8 @@ PENSE2024 <- fread("data/pense_2024.csv",
     "sa" = 'b09016a2', # dummy 
     "body_image" = 'b11007', #likert like data
     "dietetic_beha" = 'b11002', # likert like data
-    "health" = 'b13001' # dummy
   ) %>%
+  filter(!adult_edu == 8) %>%
   mutate(across(
     everything(),
     ~ ifelse(.x %in% c(-1,-2,-9,10,90:100), NA, .x)
@@ -87,19 +86,15 @@ PENSE2024 <- fread("data/pense_2024.csv",
     sa                = if_else(sa == 2, 0, as.numeric(sa)),
     ch_gender         = if_else(ch_gender == 2, 0, as.numeric(ch_gender)),
     smartphone        = if_else(smartphone == 2, 0, as.numeric(smartphone)),
-    health            = if_else(health == 2, 0, as.numeric(health)),
     self_harm         = if_else(self_harm == 2, 0, as.numeric(self_harm)),
     friends           = if_else(friends %in% c(4,3), 0, 1), # inverted higher means fewer friends
     adt_closeness     = if_else(adt_closeness %in% c(5,4,3), 1, 0), # higher means worse
-    family_time       = 6 - as.numeric(family_time), # higher means worse
     body_image        = if_else(body_image %in% c(5,4,3), 1, 0), #  higher (worse)
     exercise = 9 - as.numeric(exercise),
     adult_edu = 9- as.numeric(adult_edu),
     distraction = 6 - as.numeric(distraction)
   ) %>%
   filter(
-    homeint == 1 & # filtering bellow 13 and above 18
-      !age %in% c(1,-9,4) &
       !is.na(age) &
       !is.na(race)
   )%>%
@@ -126,6 +121,13 @@ PENSE2024 <- fread("data/pense_2024.csv",
     dietetic_beha     = as.integer(dietetic_beha)
   ) %>%
   mutate(
+    future_plans = case_when(
+      dreams %in% c(1, 3) ~ 1L,  # continue studying (alone or + work)
+      dreams %in% c(2, 4, 5) ~ 0L,  # work only, other plan, or don't know
+      TRUE ~ NA_integer_
+    )
+  ) %>%
+  mutate(
     screentime_cat = case_when(
       screentime <= 2 ~ 1,  # low: up to 2h/day
       screentime <= 5 ~ 2,  # moderate: 2h to 5h/day
@@ -136,7 +138,7 @@ PENSE2024 <- fread("data/pense_2024.csv",
                             levels = c(1, 2, 3),
                             labels = c("Low", "Moderate", "High"))
   ) %>%
-  select(-race) #-----
+  select(-race, - dreams) #-----
 
 summary(PENSE2024)
 #--------------
@@ -145,7 +147,7 @@ model_anxiety <- glm(
     anxiety ~ screentime_cat + ch_gender +
       distraction + family_time + adt_closeness + adt_trust +
       sch_friends + sch_bully + socialmedia_bully + sa +
-      alcohol_use + drug_usage + exercise + health +
+      alcohol_use + drug_usage + exercise +
       adult_edu + age +
       race_white + race_black + race_asian + race_indigenous,
     data   = PENSE2024,
@@ -173,7 +175,7 @@ model_selfimage <- glm(
   body_image ~ screentime_cat + ch_gender +
     distraction + family_time + dietetic_beha +
     sch_bully + socialmedia_bully + sa +
-    alcohol_use + drug_usage + exercise + health +
+    alcohol_use + drug_usage + exercise + 
     adult_edu + age +
     race_white + race_black + race_asian + race_indigenous,
   data   = PENSE2024,
@@ -220,3 +222,18 @@ vif(model_selfharm)
 
 
 table(PENSE2024$self_harm)
+
+
+
+model_future <- glm(
+  future_plans ~ screentime_cat +
+    anxiety + sadness + body_image +
+    sch_friends + sch_bully + socialmedia_bully +
+    adult_edu + ch_gender + age +
+    race_white + race_black + race_asian + race_indigenous,
+  data   = PENSE2024,
+  family = binomial(link = "logit")
+)
+
+summary(model_future)
+vif(model_future)
